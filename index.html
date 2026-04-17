@@ -487,8 +487,9 @@
 
     // ── Main update loop ─────────────────────────────────────────
     const TEST_SCALE = 1440; // 1 real minute = 24 simulated hours
+    const TEST_OFFSET = WARNING_SECS - 5; // start 5 sim-seconds before warning
     function update() {
-      const total = Math.floor((Date.now() / 1000 * TEST_SCALE) % 86400);
+      const total = Math.floor(((Date.now() / 1000 * TEST_SCALE) + TEST_OFFSET) % 86400);
       const h = Math.floor(total / 3600);
       const m = Math.floor((total % 3600) / 60);
       const s = total % 60;
