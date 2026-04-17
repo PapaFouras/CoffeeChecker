@@ -448,7 +448,7 @@
     // ── Config ──────────────────────────────────────────────────
     const PRE_H     = 4,  PRE_M     = 30; // 4:30 AM — pré-alerte café
     const RESUME_H  = 5,  RESUME_M  = 0;  // 5:00 AM — café autorisé
-    const WARNING_H = 16, WARNING_M = 0;  // 4:00 PM — alerte commence
+    const WARNING_H = 15, WARNING_M = 0;  // 3:00 PM — alerte commence
     const CUTOFF_H  = 16, CUTOFF_M  = 30; // 4:30 PM — café refusé
 
     const PRE_SECS     = PRE_H     * 3600 + PRE_M     * 60;
@@ -512,40 +512,55 @@
       };
     }
 
-    // ── Messages alerte (compte à rebours vers 16h30) ────────────
+    // ── Messages alerte (9 paliers × 10 min, 15h00 → 16h30) ────────
     function getWarningContent(secsLeft) {
       const m = Math.ceil(secsLeft / 60);
-      if (secsLeft > 25 * 60) return {
-        badge: '⏳ Profitez-en',
-        h1: 'Il reste du temps pour', accent: 'le Café',
-        sub: `${m} minutes de café restantes — pas de stress.`
+      if (secsLeft > 80 * 60) return {           // 15h00 – 15h10
+        badge: '☕ Profitez bien',
+        h1: 'Encore du temps pour', accent: 'le Café',
+        sub: `${m} minutes de liberté caféinée — détendez-vous.`
       };
-      if (secsLeft > 20 * 60) return {
+      if (secsLeft > 70 * 60) return {           // 15h10 – 15h20
         badge: '⏳ La fenêtre se referme',
-        h1: 'Savourez votre dernière', accent: 'Gorgée',
-        sub: `${m} minutes avant le couvre-feu.`
+        h1: 'Savourez cette', accent: 'Belle Tasse',
+        sub: `${m} minutes avant que ça se complique.`
       };
-      if (secsLeft > 15 * 60) return {
-        badge: '⚠ Couvre-feu approche',
+      if (secsLeft > 60 * 60) return {           // 15h20 – 15h30
+        badge: '⏳ Une heure restante',
+        h1: 'Encore une heure pour', accent: 'le Café',
+        sub: 'Vous avez le temps, mais ne traînez pas.'
+      };
+      if (secsLeft > 50 * 60) return {           // 15h30 – 15h40
+        badge: '🕐 La moitié approche',
+        h1: 'Pensez à votre', accent: 'Dernière Dose',
+        sub: `${m} minutes — à mi-chemin du couvre-feu.`
+      };
+      if (secsLeft > 40 * 60) return {           // 15h40 – 15h50
+        badge: '⚠ Moins de 50 minutes',
         h1: 'Faites-en votre', accent: 'Dernier Café',
-        sub: `Seulement ${m} minutes restantes.`
+        sub: `Plus que ${m} minutes de liberté.`
       };
-      if (secsLeft > 10 * 60) return {
-        badge: '⚠⚠ Le temps presse',
+      if (secsLeft > 30 * 60) return {           // 15h50 – 16h00
+        badge: '⚠ Le temps presse',
         h1: 'Terminez ce café —', accent: `${m} min`,
-        sub: 'Le couvre-feu est très proche.'
+        sub: 'Le couvre-feu s\'installe bientôt.'
       };
-      if (secsLeft > 5 * 60) return {
+      if (secsLeft > 20 * 60) return {           // 16h00 – 16h10
+        badge: '⚠⚠ Alerte — 20 minutes',
+        h1: 'C\'EST PRESQUE', accent: 'L\'HEURE',
+        sub: `${m} minutes avant l'interdiction totale.`
+      };
+      if (secsLeft > 10 * 60) return {           // 16h10 – 16h20
         badge: '🔶 Urgent — dernières minutes',
         h1: 'DERNIER APPEL', accent: `${m} Minutes`,
-        sub: 'Posez la bouilloire après celui-là.'
+        sub: 'Posez la bouilloire après celui-là. Sérieusement.'
       };
-      if (secsLeft > 60) return {
+      if (secsLeft > 60) return {                // 16h20 – 16h29
         badge: '🚨 COUVRE-FEU IMMINENT',
         h1: 'IL EST PRESQUE TEMPS DE', accent: "S'ARRÊTER",
         sub: `Seulement ${m} minute${m > 1 ? 's' : ''}. Dernier avertissement.`
       };
-      return {
+      return {                                   // 16h29 – 16h30
         badge: '🚨🚨 COMPTE À REBOURS FINAL',
         h1: 'POSEZ', accent: 'LA TASSE',
         sub: 'Café interdit dans moins d\'une minute.'
@@ -649,7 +664,7 @@
         $('timer-warning').textContent              = fmt(secsLeft);
 
         $('cup-warning').textContent =
-          raw < 0.5 ? '☕' : raw < 0.8 ? '🥵' : '😱';
+          raw < 0.33 ? '☕' : raw < 0.55 ? '😬' : raw < 0.77 ? '🥵' : '😱';
 
       // ── REFUSÉ ────────────────────────────────────────
       } else {
