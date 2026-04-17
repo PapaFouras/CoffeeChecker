@@ -486,10 +486,12 @@
     }
 
     // ── Main update loop ─────────────────────────────────────────
+    const TEST_SCALE = 1440; // 1 real minute = 24 simulated hours
     function update() {
-      const now   = new Date();
-      const h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
-      const total = h * 3600 + m * 60 + s;
+      const total = Math.floor((Date.now() / 1000 * TEST_SCALE) % 86400);
+      const h = Math.floor(total / 3600);
+      const m = Math.floor((total % 3600) / 60);
+      const s = total % 60;
 
       $('time-display').textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
 
@@ -567,7 +569,7 @@
     spawnParticles();
     setInterval(spawnParticles, 30000);
     update();
-    setInterval(update, 1000);
+    setInterval(update, 100);
   </script>
 </body>
 </html>
