@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Can I Drink Coffee?</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+      transition: background 1s ease;
+    }
+
+    /* ─────────────────────────────────────────
+       PROGRESS BAR (warning zone only)
+    ───────────────────────────────────────── */
+    #progress-bar-wrap {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 6px;
+      background: rgba(0,0,0,0.15);
+      z-index: 200;
+      display: none;
+    }
+    #progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      transition: width 1s linear, background 2s ease;
+      border-radius: 0 4px 4px 0;
+    }
+
+    /* ─────────────────────────────────────────
+       ALLOWED STATE
+    ───────────────────────────────────────── */
+    body.allowed {
+      background: linear-gradient(135deg, #fdf6ec 0%, #f5deb3 50%, #e8c99a 100%);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 50px;
+      padding: 8px 22px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+    body.allowed .badge {
+      background: rgba(34,197,94,0.15);
+      border: 2px solid #22c55e;
+      color: #16a34a;
+      animation: badgePulse 2s ease-in-out infinite;
+    }
+    @keyframes badgePulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
+      50%      { box-shadow: 0 0 0 12px rgba(34,197,94,0); }
+    }
+
+    .cup-wrapper {
+      font-size: 9rem;
+      line-height: 1;
+      margin-bottom: 12px;
+      display: inline-block;
+    }
+    body.allowed .cup-wrapper { animation: floatCup 3s ease-in-out infinite; }
+    @keyframes floatCup {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-18px); }
+    }
+
+    .steam {
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      margin-bottom: 24px;
+      height: 48px;
+    }
+    .steam span {
+      display: block;
+      width: 6px;
+      border-radius: 4px;
+      background: linear-gradient(to top, rgba(180,120,60,0.6), transparent);
+      animation: steamRise 2s ease-in-out infinite;
+    }
+    .steam span:nth-child(1) { height: 36px; animation-delay: 0s; }
+    .steam span:nth-child(2) { height: 48px; animation-delay: 0.4s; }
+    .steam span:nth-child(3) { height: 32px; animation-delay: 0.8s; }
+    @keyframes steamRise {
+      0%   { transform: translateY(0) scaleX(1);    opacity: 0.6; }
+      50%  { transform: translateY(-16px) scaleX(1.4); opacity: 0.4; }
+      100% { transform: translateY(-32px) scaleX(0.8); opacity: 0; }
+    }
+
+    h1 {
+      font-size: clamp(2.5rem, 8vw, 5.5rem);
+      font-weight: 900;
+      line-height: 1.05;
+      margin-bottom: 10px;
+      letter-spacing: -1px;
+    }
+    body.allowed h1         { color: #3b1a08; }
+    body.allowed h1 .accent { color: #22c55e; }
+
+    .sub {
+      font-size: 1.15rem;
+      margin-bottom: 36px;
+      font-weight: 500;
+    }
+    body.allowed .sub { color: #6f3d1f; }
+
+    .countdown-box {
+      border-radius: 14px;
+      padding: 18px 32px;
+      display: inline-block;
+    }
+    body.allowed .countdown-box {
+      background: rgba(255,255,255,0.6);
+      backdrop-filter: blur(8px);
+      border: 1.5px solid rgba(180,120,60,0.3);
+    }
+    .countdown-box .label {
+      font-size: 0.72rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    body.allowed .countdown-box .label { color: #6f3d1f; }
+    .countdown-box .timer {
+      font-size: 2.2rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 2px;
+    }
+    body.allowed .countdown-box .timer { color: #3b1a08; }
+
+    /* Floating particles */
+    .particles { position: fixed; inset: 0; pointer-events: none; z-index: 1; }
+    .particle {
+      position: absolute;
+      opacity: 0;
+      animation: particleFly 8s ease-in infinite;
+    }
+    @keyframes particleFly {
+      0%   { transform: translateY(110vh) rotate(0deg);   opacity: 0; }
+      10%  { opacity: 0.7; }
+      90%  { opacity: 0.5; }
+      100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+    }
+
+    /* ─────────────────────────────────────────
+       WARNING STATE  (4:00 → 4:30 PM)
+       Background color is set dynamically via JS.
+       Intensity classes control animation speed.
+    ───────────────────────────────────────── */
+    body.warning .badge {
+      background: rgba(251,191,36,0.2);
+      border: 2px solid #f59e0b;
+      color: #92400e;
+      animation: warnBadgePulse 1.5s ease-in-out infinite;
+    }
+    @keyframes warnBadgePulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.5); }
+      50%      { box-shadow: 0 0 0 12px rgba(245,158,11,0); }
+    }
+    body.warning h1         { color: #fff7ed; text-shadow: 0 2px 12px rgba(0,0,0,0.25); }
+    body.warning h1 .accent { color: #fed7aa; }
+    body.warning .sub       { color: #ffedd5; }
+
+    body.warning .countdown-box {
+      background: rgba(0,0,0,0.2);
+      backdrop-filter: blur(8px);
+      border: 1.5px solid rgba(255,255,255,0.25);
+    }
+    body.warning .countdown-box .label { color: #fed7aa; }
+    body.warning .countdown-box .timer { color: #fff7ed; }
+
+    /* Cup shake — intensity driven by JS class */
+    body.warning.warn-low  .cup-wrapper { animation: floatCup 3s ease-in-out infinite; }
+    body.warning.warn-mid  .cup-wrapper { animation: warnWobble 0.5s ease-in-out infinite; }
+    body.warning.warn-high .cup-wrapper { animation: warnWobble 0.25s ease-in-out infinite; }
+    body.warning.warn-crit .cup-wrapper { animation: hardShake 0.12s linear infinite; }
+
+    @keyframes warnWobble {
+      0%,100% { transform: rotate(-3deg); }
+      50%      { transform: rotate(3deg); }
+    }
+    @keyframes hardShake {
+      0%  { transform: translate(-3px, 0) rotate(-2deg); }
+      25% { transform: translate(3px,-2px) rotate(2deg); }
+      50% { transform: translate(-2px, 2px) rotate(-1deg); }
+      75% { transform: translate(3px, 1px) rotate(1deg); }
+      100%{ transform: translate(-3px, 0) rotate(-2deg); }
+    }
+
+    /* Progress bar colors by intensity */
+    body.warn-low  #progress-bar-fill { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+    body.warn-mid  #progress-bar-fill { background: linear-gradient(90deg, #f97316, #ea580c); }
+    body.warn-high #progress-bar-fill { background: linear-gradient(90deg, #ef4444, #dc2626); }
+    body.warn-crit #progress-bar-fill {
+      background: linear-gradient(90deg, #dc2626, #b91c1c);
+      animation: barFlash 0.4s step-start infinite;
+    }
+    @keyframes barFlash {
+      0%  { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ─────────────────────────────────────────
+       DENIED STATE
+    ───────────────────────────────────────── */
+    body.denied { background: #0a0000; animation: sirenBg 0.6s step-start infinite; }
+    @keyframes sirenBg {
+      0%  { background: #1a0000; }
+      50% { background: #2d0000; }
+    }
+
+    .flash-overlay {
+      position: fixed; inset: 0;
+      background: rgba(220,0,0,0.18);
+      animation: flashOverlay 0.5s ease-in-out infinite alternate;
+      pointer-events: none; z-index: 2;
+    }
+    @keyframes flashOverlay { from { opacity:1; } to { opacity:0; } }
+
+    .siren-bar {
+      position: fixed; top: 0; left: 0; right: 0; height: 8px; z-index: 100; display: flex;
+    }
+    .siren-left  { flex:1; background:#dc2626; animation: sl 0.5s ease-in-out infinite alternate; }
+    .siren-right { flex:1; background:#1d4ed8; animation: sr 0.5s ease-in-out infinite alternate; }
+    @keyframes sl { from{opacity:1} to{opacity:0.1} }
+    @keyframes sr { from{opacity:0.1} to{opacity:1} }
+
+    .stripes {
+      position: fixed; left:0; right:0; height:28px;
+      background: repeating-linear-gradient(-45deg,
+        #dc2626 0, #dc2626 20px, #1a0000 20px, #1a0000 40px);
+      z-index: 99;
+      animation: stripesScroll 1s linear infinite;
+    }
+    .stripes-top    { top: 8px; }
+    .stripes-bottom { bottom: 0; }
+    @keyframes stripesScroll { from{background-position:0} to{background-position:56px 0} }
+
+    body.denied h1 {
+      font-size: clamp(2.5rem, 9vw, 6.5rem);
+      color: #ff1a1a;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      text-shadow: 0 0 10px #ff0000, 0 0 30px #ff0000, 0 0 60px rgba(255,0,0,0.5);
+      animation: glitch 2s steps(1) infinite;
+    }
+    @keyframes glitch {
+      0%,96%,100% { text-shadow:0 0 10px #ff0000, 0 0 30px #ff0000, 0 0 60px rgba(255,0,0,0.5); transform:none; }
+      97% { text-shadow:-4px 0 #00ffff, 4px 0 #ff00ff; transform:translate(-2px,0); }
+      98% { text-shadow: 4px 0 #00ffff,-4px 0 #ff00ff; transform:translate( 2px,0); }
+      99% { text-shadow:-4px 0 #ff00ff, 4px 0 #00ffff; transform:translate(0,-2px); }
+    }
+
+    .denied-cup {
+      font-size: clamp(5rem, 18vw, 12rem);
+      line-height: 1;
+      margin-bottom: 4px;
+      display: inline-block;
+      animation: hardShake 0.1s linear infinite;
+      filter: drop-shadow(0 0 30px rgba(220,38,38,0.9));
+    }
+    .warning-line {
+      font-size: clamp(1rem, 3vw, 1.5rem);
+      font-weight: 700;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      text-shadow: 0 0 10px rgba(251,191,36,0.8);
+      margin-bottom: 28px;
+    }
+    body.denied .warning-line { color:#fbbf24; animation: warnPulse 0.8s ease-in-out infinite alternate; }
+    @keyframes warnPulse { from{opacity:1} to{opacity:0.3} }
+
+    body.denied .countdown-box {
+      background: rgba(30,0,0,0.85);
+      border: 2px solid #dc2626;
+      box-shadow: 0 0 20px rgba(220,38,38,0.6), inset 0 0 20px rgba(220,38,38,0.1);
+    }
+    body.denied .countdown-box .label { color:#f87171; }
+    body.denied .countdown-box .timer { color:#ff4444; text-shadow:0 0 10px rgba(255,68,68,0.8); }
+
+    body.denied .alarm-icons {
+      font-size: 3.5rem; margin-bottom: 10px; display:inline-block;
+      animation: hardShake 0.15s linear infinite;
+    }
+
+    .warning-signs {
+      position: fixed; inset: 0; pointer-events: none; z-index: 3;
+    }
+    .wsign {
+      position: absolute;
+      font-size: 3rem;
+      animation: wsFloat 3s ease-in-out infinite;
+      opacity: 0.15;
+    }
+    .wsign:nth-child(1) { top:8%;  left:4%;   animation-delay:0s;   font-size:2.5rem; }
+    .wsign:nth-child(2) { top:12%; right:5%;  animation-delay:0.5s; font-size:3.5rem; }
+    .wsign:nth-child(3) { top:45%; left:2%;   animation-delay:1s;   font-size:2rem;   }
+    .wsign:nth-child(4) { top:50%; right:3%;  animation-delay:1.5s; font-size:4rem;   }
+    .wsign:nth-child(5) { top:75%; left:7%;   animation-delay:0.3s; font-size:2.8rem; }
+    .wsign:nth-child(6) { top:80%; right:6%;  animation-delay:0.8s; font-size:2.2rem; }
+    .wsign:nth-child(7) { top:30%; left:1%;   animation-delay:1.2s; font-size:1.8rem; }
+    .wsign:nth-child(8) { top:65%; right:2%;  animation-delay:0.6s; font-size:3rem;   }
+    @keyframes wsFloat {
+      0%,100% { transform:translateY(0) rotate(-5deg);  opacity:0.15; }
+      50%      { transform:translateY(-10px) rotate(5deg); opacity:0.35; }
+    }
+
+    /* CRT scanlines on denied */
+    body.denied::after {
+      content:''; position:fixed; inset:0;
+      background: repeating-linear-gradient(to bottom, transparent 0, transparent 3px, rgba(0,0,0,0.15) 3px, rgba(0,0,0,0.15) 4px);
+      pointer-events:none; z-index:1;
+    }
+
+    /* ─────────────────────────────────────────
+       SHARED UTILITIES
+    ───────────────────────────────────────── */
+    .page { text-align:center; position:relative; z-index:10; padding:0 16px; }
+
+    #time-display {
+      position:fixed; bottom:50px; right:16px;
+      font-size:0.72rem; font-weight:600; letter-spacing:2px; opacity:0.5; z-index:200;
+    }
+    body.allowed #time-display, body.warning #time-display { color:#6f3d1f; }
+    body.denied  #time-display { color:#f87171; }
+
+    /* Hide/show helpers */
+    .hidden { display:none !important; }
+  </style>
+</head>
+<body>
+
+  <!-- Progress bar (warning zone) -->
+  <div id="progress-bar-wrap">
+    <div id="progress-bar-fill"></div>
+  </div>
+
+  <!-- Time display -->
+  <div id="time-display"></div>
+
+  <!-- ═══════════ ALLOWED ═══════════ -->
+  <div class="page" id="page-allowed">
+    <div class="badge" id="badge-allowed">✓ &nbsp;Status: Cleared</div>
+    <div class="steam"><span></span><span></span><span></span></div>
+    <div class="cup-wrapper">☕</div>
+    <h1>You May<br/><span class="accent">Drink Coffee</span></h1>
+    <p class="sub" id="sub-allowed">Enjoy responsibly. You've earned it.</p>
+    <div class="countdown-box">
+      <div class="label">Coffee becomes forbidden in</div>
+      <div class="timer" id="timer-allowed">–</div>
+    </div>
+    <div class="particles" id="particles"></div>
+  </div>
+
+  <!-- ═══════════ WARNING ═══════════ -->
+  <div class="page hidden" id="page-warning">
+    <div class="badge" id="badge-warning">⚠ &nbsp;Warning</div>
+    <div class="steam"><span></span><span></span><span></span></div>
+    <div class="cup-wrapper" id="cup-warning">☕</div>
+    <h1 id="h1-warning">Last call for<br/><span class="accent" id="h1-accent-warning">Coffee</span></h1>
+    <p class="sub" id="sub-warning">The curfew is approaching...</p>
+    <div class="countdown-box">
+      <div class="label">Coffee forbidden in</div>
+      <div class="timer" id="timer-warning">–</div>
+    </div>
+  </div>
+
+  <!-- ═══════════ DENIED ═══════════ -->
+  <div class="page hidden" id="page-denied">
+    <div class="siren-bar"><div class="siren-left"></div><div class="siren-right"></div></div>
+    <div class="stripes stripes-top"></div>
+    <div class="stripes stripes-bottom"></div>
+    <div class="flash-overlay"></div>
+    <div class="warning-signs">
+      <div class="wsign">⚠️</div><div class="wsign">🚨</div>
+      <div class="wsign">⛔</div><div class="wsign">🚫</div>
+      <div class="wsign">⚠️</div><div class="wsign">🔴</div>
+      <div class="wsign">🚨</div><div class="wsign">⛔</div>
+    </div>
+    <div class="alarm-icons">🚨 ⚠️ 🚨</div>
+    <div class="denied-cup">🚫☕</div>
+    <h1>Coffee Denied</h1>
+    <p class="warning-line">⚠ Step away from the cup ⚠</p>
+    <div class="countdown-box">
+      <div class="label">Coffee resumes in</div>
+      <div class="timer" id="timer-denied">–</div>
+    </div>
+  </div>
+
+  <script>
+    // ── Config ──────────────────────────────────────────────────
+    const WARNING_H = 16, WARNING_M = 0;   // 4:00 PM — warning starts
+    const CUTOFF_H  = 16, CUTOFF_M  = 30;  // 4:30 PM — coffee denied
+    const RESUME_H  = 6,  RESUME_M  = 0;   // 6:00 AM — coffee allowed again
+
+    const WARNING_SECS = WARNING_H * 3600 + WARNING_M * 60;
+    const CUTOFF_SECS  = CUTOFF_H  * 3600 + CUTOFF_M  * 60;
+    const WINDOW_SECS  = CUTOFF_SECS - WARNING_SECS; // 1800 s
+
+    // ── Color interpolation ──────────────────────────────────────
+    // warning-start → warning-end (background gradient top color)
+    const BG1_START = [253, 246, 236]; // cream
+    const BG1_END   = [120,  20,   0]; // deep red-brown
+    const BG2_START = [232, 201, 154]; // warm sand
+    const BG2_END   = [ 60,   0,   0];
+
+    function lerp(a, b, t) { return Math.round(a + (b - a) * t); }
+    function blendRgb(c1, c2, t) {
+      return `rgb(${lerp(c1[0],c2[0],t)},${lerp(c1[1],c2[1],t)},${lerp(c1[2],c2[2],t)})`;
+    }
+    // ease-in-cubic so the early warning is subtle
+    function ease(t) { return t * t * t; }
+
+    // ── Warning messages ─────────────────────────────────────────
+    function getWarningContent(secsLeft) {
+      const m = Math.ceil(secsLeft / 60);
+      if (secsLeft > 25 * 60) return {
+        badge: '⏳ Enjoy while it lasts',
+        h1: 'Still time for', accent: 'Coffee',
+        sub: `${m} minutes of coffee time remain — no rush.`
+      };
+      if (secsLeft > 20 * 60) return {
+        badge: '⏳ Window closing',
+        h1: 'Savour your last', accent: 'Sip',
+        sub: `${m} minutes left before the curfew begins.`
+      };
+      if (secsLeft > 15 * 60) return {
+        badge: '⚠ Coffee curfew approaching',
+        h1: 'Better make it', accent: 'Your Last Cup',
+        sub: `Only ${m} minutes of coffee time remain.`
+      };
+      if (secsLeft > 10 * 60) return {
+        badge: '⚠⚠ Time is running out',
+        h1: 'Finish that cup —', accent: `${m} min left`,
+        sub: 'The curfew is getting very close.'
+      };
+      if (secsLeft > 5 * 60) return {
+        badge: '🔶 Urgent — last few minutes',
+        h1: 'LAST CALL', accent: `${m} Minutes`,
+        sub: 'Seriously, put the kettle down after this one.'
+      };
+      if (secsLeft > 60) return {
+        badge: '🚨 IMMINENT CURFEW',
+        h1: 'ALMOST TIME TO', accent: 'STOP',
+        sub: `Only ${m} minute${m > 1 ? 's' : ''} remain. This is your final warning.`
+      };
+      return {
+        badge: '🚨🚨 FINAL COUNTDOWN',
+        h1: 'PUT DOWN', accent: 'THE CUP',
+        sub: `Coffee forbidden in under a minute.`
+      };
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────
+    const pad = n => String(n).padStart(2,'0');
+    const fmt = s => `${pad(Math.floor(s/3600))}:${pad(Math.floor(s%3600/60))}:${pad(s%60)}`;
+    const $ = id => document.getElementById(id);
+
+    const PARTICLES = ['☕','🫘','🤎','☕','🫖'];
+    function spawnParticles() {
+      const c = $('particles'); if (!c) return; c.innerHTML = '';
+      for (let i = 0; i < 22; i++) {
+        const el = document.createElement('span');
+        el.className = 'particle';
+        el.textContent = PARTICLES[Math.floor(Math.random() * PARTICLES.length)];
+        el.style.cssText = `left:${Math.random()*100}vw;font-size:${1+Math.random()*1.5}rem;
+          animation-delay:${Math.random()*8}s;animation-duration:${6+Math.random()*6}s`;
+        c.appendChild(el);
+      }
+    }
+
+    // ── Main update loop ─────────────────────────────────────────
+    function update() {
+      const now   = new Date();
+      const h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
+      const total = h * 3600 + m * 60 + s;
+
+      $('time-display').textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+
+      // ── ALLOWED ──────────────────────────────────────
+      if (total < WARNING_SECS) {
+        setPage('allowed');
+        const secsLeft = WARNING_SECS - total;
+        $('timer-allowed').textContent = fmt(secsLeft);
+
+      // ── WARNING ──────────────────────────────────────
+      } else if (total < CUTOFF_SECS) {
+        setPage('warning');
+
+        const elapsed  = total - WARNING_SECS;
+        const secsLeft = CUTOFF_SECS - total;
+        const raw      = elapsed / WINDOW_SECS;          // 0 → 1, linear
+        const t        = ease(raw);                       // eased
+
+        // Background color blend
+        document.body.style.background =
+          `linear-gradient(135deg, ${blendRgb(BG1_START, BG1_END, t)} 0%, ${blendRgb(BG2_START, BG2_END, t)} 100%)`;
+
+        // Progress bar
+        $('progress-bar-wrap').style.display = 'block';
+        $('progress-bar-fill').style.width   = `${raw * 100}%`;
+
+        // Intensity class (controls animation speed & bar color)
+        const intensityClass =
+          raw < 0.33 ? 'warn-low' :
+          raw < 0.66 ? 'warn-mid' :
+          raw < 0.90 ? 'warn-high' : 'warn-crit';
+        document.body.classList.remove('warn-low','warn-mid','warn-high','warn-crit');
+        document.body.classList.add(intensityClass);
+
+        // Content
+        const content = getWarningContent(secsLeft);
+        $('badge-warning').textContent    = content.badge;
+        $('h1-warning').childNodes[0].nodeValue = content.h1 + '\n';
+        $('h1-accent-warning').textContent = content.accent;
+        $('sub-warning').textContent       = content.sub;
+        $('timer-warning').textContent     = fmt(secsLeft);
+
+        // Cup emoji escalates
+        $('cup-warning').textContent =
+          raw < 0.5 ? '☕' : raw < 0.8 ? '🥵' : '😱';
+
+      // ── DENIED ───────────────────────────────────────
+      } else {
+        setPage('denied');
+        document.body.style.background = '';
+
+        // Time until 6:00 AM
+        const resumeSecs = RESUME_H * 3600 + RESUME_M * 60;
+        const secsUntilResume = total < resumeSecs
+          ? resumeSecs - total
+          : (86400 - total) + resumeSecs;
+        $('timer-denied').textContent = fmt(secsUntilResume);
+      }
+    }
+
+    // ── Page switcher ────────────────────────────────────────────
+    const pages = ['allowed','warning','denied'];
+    function setPage(name) {
+      pages.forEach(p => {
+        const el = $(`page-${p}`);
+        el.classList.toggle('hidden', p !== name);
+      });
+      document.body.className = name;
+      if (name === 'warning') {
+        document.body.classList.add('warn-low'); // will be updated in loop
+      }
+    }
+
+    // ── Init ─────────────────────────────────────────────────────
+    spawnParticles();
+    setInterval(spawnParticles, 30000);
+    update();
+    setInterval(update, 1000);
+  </script>
+</body>
+</html>
