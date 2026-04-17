@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Can I Drink Coffee?</title>
+  <title>Puis-je boire du café ?</title>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -19,7 +19,7 @@
     }
 
     /* ─────────────────────────────────────────
-       PROGRESS BAR (warning zone only)
+       PROGRESS BAR
     ───────────────────────────────────────── */
     #progress-bar-wrap {
       position: fixed;
@@ -159,9 +159,42 @@
     }
 
     /* ─────────────────────────────────────────
+       PRE-ALLOWED STATE  (4:30 → 5:00 AM)
+       Background set dynamically via JS.
+    ───────────────────────────────────────── */
+    body.pre-allowed .badge {
+      background: rgba(251,191,36,0.15);
+      border: 2px solid #f59e0b;
+      color: #fcd34d;
+      animation: preBadgePulse 3s ease-in-out infinite;
+    }
+    @keyframes preBadgePulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(251,191,36,0.4); }
+      50%      { box-shadow: 0 0 0 12px rgba(251,191,36,0); }
+    }
+    body.pre-allowed h1         { color: #fef3c7; text-shadow: 0 2px 12px rgba(0,0,0,0.4); }
+    body.pre-allowed h1 .accent { color: #fbbf24; }
+    body.pre-allowed .sub       { color: #e5e7eb; }
+
+    body.pre-allowed .countdown-box {
+      background: rgba(0,0,0,0.3);
+      backdrop-filter: blur(8px);
+      border: 1.5px solid rgba(251,191,36,0.3);
+    }
+    body.pre-allowed .countdown-box .label { color: #fcd34d; }
+    body.pre-allowed .countdown-box .timer { color: #fef3c7; }
+
+    body.pre-allowed .cup-wrapper { animation: floatCup 4s ease-in-out infinite; }
+
+    /* Progress bar colors — pre-allowed (dawn) */
+    body.pre-low  #progress-bar-fill { background: linear-gradient(90deg, #1e3a8a, #3b82f6); }
+    body.pre-mid  #progress-bar-fill { background: linear-gradient(90deg, #3b82f6, #f59e0b); }
+    body.pre-high #progress-bar-fill { background: linear-gradient(90deg, #f59e0b, #f97316); }
+    body.pre-crit #progress-bar-fill { background: linear-gradient(90deg, #f97316, #22c55e); animation: barFlash 0.6s step-start infinite; }
+
+    /* ─────────────────────────────────────────
        WARNING STATE  (4:00 → 4:30 PM)
        Background color is set dynamically via JS.
-       Intensity classes control animation speed.
     ───────────────────────────────────────── */
     body.warning .badge {
       background: rgba(251,191,36,0.2);
@@ -185,7 +218,6 @@
     body.warning .countdown-box .label { color: #fed7aa; }
     body.warning .countdown-box .timer { color: #fff7ed; }
 
-    /* Cup shake — intensity driven by JS class */
     body.warning.warn-low  .cup-wrapper { animation: floatCup 3s ease-in-out infinite; }
     body.warning.warn-mid  .cup-wrapper { animation: warnWobble 0.5s ease-in-out infinite; }
     body.warning.warn-high .cup-wrapper { animation: warnWobble 0.25s ease-in-out infinite; }
@@ -203,7 +235,6 @@
       100%{ transform: translate(-3px, 0) rotate(-2deg); }
     }
 
-    /* Progress bar colors by intensity */
     body.warn-low  #progress-bar-fill { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
     body.warn-mid  #progress-bar-fill { background: linear-gradient(90deg, #f97316, #ea580c); }
     body.warn-high #progress-bar-fill { background: linear-gradient(90deg, #ef4444, #dc2626); }
@@ -321,7 +352,6 @@
       50%      { transform:translateY(-10px) rotate(5deg); opacity:0.35; }
     }
 
-    /* CRT scanlines on denied */
     body.denied::after {
       content:''; position:fixed; inset:0;
       background: repeating-linear-gradient(to bottom, transparent 0, transparent 3px, rgba(0,0,0,0.15) 3px, rgba(0,0,0,0.15) 4px);
@@ -338,50 +368,61 @@
       font-size:0.72rem; font-weight:600; letter-spacing:2px; opacity:0.5; z-index:200;
     }
     body.allowed #time-display, body.warning #time-display { color:#6f3d1f; }
+    body.pre-allowed #time-display { color:#d1d5db; }
     body.denied  #time-display { color:#f87171; }
 
-    /* Hide/show helpers */
     .hidden { display:none !important; }
   </style>
 </head>
 <body>
 
-  <!-- Progress bar (warning zone) -->
   <div id="progress-bar-wrap">
     <div id="progress-bar-fill"></div>
   </div>
 
-  <!-- Time display -->
   <div id="time-display"></div>
 
-  <!-- ═══════════ ALLOWED ═══════════ -->
+  <!-- ═══════════ AUTORISÉ ═══════════ -->
   <div class="page" id="page-allowed">
-    <div class="badge" id="badge-allowed">✓ &nbsp;Status: Cleared</div>
+    <div class="badge" id="badge-allowed">✓ &nbsp;Statut : Autorisé</div>
     <div class="steam"><span></span><span></span><span></span></div>
     <div class="cup-wrapper">☕</div>
-    <h1>You May<br/><span class="accent">Drink Coffee</span></h1>
-    <p class="sub" id="sub-allowed">Enjoy responsibly. You've earned it.</p>
+    <h1>Vous pouvez<br/><span class="accent">Boire du Café</span></h1>
+    <p class="sub" id="sub-allowed">Savourez-le. Vous l'avez mérité.</p>
     <div class="countdown-box">
-      <div class="label">Coffee becomes forbidden in</div>
+      <div class="label">Le café devient interdit dans</div>
       <div class="timer" id="timer-allowed">–</div>
     </div>
     <div class="particles" id="particles"></div>
   </div>
 
-  <!-- ═══════════ WARNING ═══════════ -->
+  <!-- ═══════════ PRÉ-AUTORISÉ ═══════════ -->
+  <div class="page hidden" id="page-pre-allowed">
+    <div class="badge" id="badge-pre-allowed">🌙 &nbsp;Le café approche</div>
+    <div class="steam"><span></span><span></span><span></span></div>
+    <div class="cup-wrapper" id="cup-pre-allowed">😴</div>
+    <h1 id="h1-pre-allowed">Encore un peu<br/><span class="accent" id="h1-accent-pre-allowed">de patience...</span></h1>
+    <p class="sub" id="sub-pre-allowed">L'aube se lève doucement...</p>
+    <div class="countdown-box">
+      <div class="label">Premier café dans</div>
+      <div class="timer" id="timer-pre-allowed">–</div>
+    </div>
+  </div>
+
+  <!-- ═══════════ ALERTE ═══════════ -->
   <div class="page hidden" id="page-warning">
-    <div class="badge" id="badge-warning">⚠ &nbsp;Warning</div>
+    <div class="badge" id="badge-warning">⚠ &nbsp;Attention</div>
     <div class="steam"><span></span><span></span><span></span></div>
     <div class="cup-wrapper" id="cup-warning">☕</div>
-    <h1 id="h1-warning">Last call for<br/><span class="accent" id="h1-accent-warning">Coffee</span></h1>
-    <p class="sub" id="sub-warning">The curfew is approaching...</p>
+    <h1 id="h1-warning">Dernier appel pour<br/><span class="accent" id="h1-accent-warning">le Café</span></h1>
+    <p class="sub" id="sub-warning">Le couvre-feu approche...</p>
     <div class="countdown-box">
-      <div class="label">Coffee forbidden in</div>
+      <div class="label">Café interdit dans</div>
       <div class="timer" id="timer-warning">–</div>
     </div>
   </div>
 
-  <!-- ═══════════ DENIED ═══════════ -->
+  <!-- ═══════════ REFUSÉ ═══════════ -->
   <div class="page hidden" id="page-denied">
     <div class="siren-bar"><div class="siren-left"></div><div class="siren-right"></div></div>
     <div class="stripes stripes-top"></div>
@@ -395,75 +436,119 @@
     </div>
     <div class="alarm-icons">🚨 ⚠️ 🚨</div>
     <div class="denied-cup">🚫☕</div>
-    <h1>Coffee Denied</h1>
-    <p class="warning-line">⚠ Step away from the cup ⚠</p>
+    <h1>Café Refusé</h1>
+    <p class="warning-line">⚠ Lâchez la tasse ⚠</p>
     <div class="countdown-box">
-      <div class="label">Coffee resumes in</div>
+      <div class="label">Prochain café dans</div>
       <div class="timer" id="timer-denied">–</div>
     </div>
   </div>
 
   <script>
     // ── Config ──────────────────────────────────────────────────
-    const WARNING_H = 16, WARNING_M = 0;   // 4:00 PM — warning starts
-    const CUTOFF_H  = 16, CUTOFF_M  = 30;  // 4:30 PM — coffee denied
-    const RESUME_H  = 5,  RESUME_M  = 0;   // 5:00 AM — coffee allowed again
+    const PRE_H     = 4,  PRE_M     = 30; // 4:30 AM — pré-alerte café
+    const RESUME_H  = 5,  RESUME_M  = 0;  // 5:00 AM — café autorisé
+    const WARNING_H = 16, WARNING_M = 0;  // 4:00 PM — alerte commence
+    const CUTOFF_H  = 16, CUTOFF_M  = 30; // 4:30 PM — café refusé
 
+    const PRE_SECS     = PRE_H     * 3600 + PRE_M     * 60;
+    const RESUME_SECS  = RESUME_H  * 3600 + RESUME_M  * 60;
     const WARNING_SECS = WARNING_H * 3600 + WARNING_M * 60;
     const CUTOFF_SECS  = CUTOFF_H  * 3600 + CUTOFF_M  * 60;
-    const WINDOW_SECS  = CUTOFF_SECS - WARNING_SECS; // 1800 s
+    const PRE_WINDOW   = RESUME_SECS  - PRE_SECS;     // 1800 s
+    const WARN_WINDOW  = CUTOFF_SECS  - WARNING_SECS; // 1800 s
 
     // ── Color interpolation ──────────────────────────────────────
-    // warning-start → warning-end (background gradient top color)
-    const BG1_START = [253, 246, 236]; // cream
-    const BG1_END   = [120,  20,   0]; // deep red-brown
-    const BG2_START = [232, 201, 154]; // warm sand
-    const BG2_END   = [ 60,   0,   0];
+    // Warning: cream → deep red
+    const BG1_START = [253, 246, 236]; const BG1_END = [120,  20,  0];
+    const BG2_START = [232, 201, 154]; const BG2_END = [ 60,   0,  0];
+    // Pre-allowed: deep night blue → warm dawn
+    const PRE1_START = [10,  8,  35]; const PRE1_END = [255, 186,  80];
+    const PRE2_START = [ 5,  4,  20]; const PRE2_END = [200, 130,  40];
 
     function lerp(a, b, t) { return Math.round(a + (b - a) * t); }
     function blendRgb(c1, c2, t) {
       return `rgb(${lerp(c1[0],c2[0],t)},${lerp(c1[1],c2[1],t)},${lerp(c1[2],c2[2],t)})`;
     }
-    // ease-in-cubic so the early warning is subtle
     function ease(t) { return t * t * t; }
 
-    // ── Warning messages ─────────────────────────────────────────
+    // ── Messages pré-autorisé (compte à rebours vers 5h) ─────────
+    function getPreAllowedContent(secsLeft) {
+      const m = Math.ceil(secsLeft / 60);
+      if (secsLeft > 25 * 60) return {
+        badge: '🌙 Le café approche',
+        h1: 'Encore un peu de', accent: 'Patience...',
+        sub: `Plus que ${m} minutes avant le premier café.`
+      };
+      if (secsLeft > 20 * 60) return {
+        badge: '🌌 L\'aube se lève',
+        h1: 'Le café se', accent: 'Prépare',
+        sub: `${m} minutes avant l'autorisation.`
+      };
+      if (secsLeft > 15 * 60) return {
+        badge: '🌅 Bientôt...',
+        h1: 'Plus que', accent: `${m} min`,
+        sub: 'La cafetière chauffe tranquillement.'
+      };
+      if (secsLeft > 10 * 60) return {
+        badge: '☀️ Presque l\'heure !',
+        h1: 'Encore', accent: `${m} Minutes`,
+        sub: 'Patience, le café arrive à grands pas.'
+      };
+      if (secsLeft > 5 * 60) return {
+        badge: '🔥 Café imminent !',
+        h1: 'PRÉPAREZ', accent: 'LA TASSE',
+        sub: `Seulement ${m} minute${m > 1 ? 's' : ''} ! La tasse est prête ?`
+      };
+      if (secsLeft > 60) return {
+        badge: '🚀 CAFÉ IMMINENT',
+        h1: 'PLUS QUE', accent: `${m} MIN !`,
+        sub: 'C\'est le moment de sortir la cafetière.'
+      };
+      return {
+        badge: '🎉🎉 C\'EST L\'HEURE !',
+        h1: 'LE CAFÉ', accent: 'ARRIVE !',
+        sub: 'Moins d\'une minute — prêt à déguster !'
+      };
+    }
+
+    // ── Messages alerte (compte à rebours vers 16h30) ────────────
     function getWarningContent(secsLeft) {
       const m = Math.ceil(secsLeft / 60);
       if (secsLeft > 25 * 60) return {
-        badge: '⏳ Enjoy while it lasts',
-        h1: 'Still time for', accent: 'Coffee',
-        sub: `${m} minutes of coffee time remain — no rush.`
+        badge: '⏳ Profitez-en',
+        h1: 'Il reste du temps pour', accent: 'le Café',
+        sub: `${m} minutes de café restantes — pas de stress.`
       };
       if (secsLeft > 20 * 60) return {
-        badge: '⏳ Window closing',
-        h1: 'Savour your last', accent: 'Sip',
-        sub: `${m} minutes left before the curfew begins.`
+        badge: '⏳ La fenêtre se referme',
+        h1: 'Savourez votre dernière', accent: 'Gorgée',
+        sub: `${m} minutes avant le couvre-feu.`
       };
       if (secsLeft > 15 * 60) return {
-        badge: '⚠ Coffee curfew approaching',
-        h1: 'Better make it', accent: 'Your Last Cup',
-        sub: `Only ${m} minutes of coffee time remain.`
+        badge: '⚠ Couvre-feu approche',
+        h1: 'Faites-en votre', accent: 'Dernier Café',
+        sub: `Seulement ${m} minutes restantes.`
       };
       if (secsLeft > 10 * 60) return {
-        badge: '⚠⚠ Time is running out',
-        h1: 'Finish that cup —', accent: `${m} min left`,
-        sub: 'The curfew is getting very close.'
+        badge: '⚠⚠ Le temps presse',
+        h1: 'Terminez ce café —', accent: `${m} min`,
+        sub: 'Le couvre-feu est très proche.'
       };
       if (secsLeft > 5 * 60) return {
-        badge: '🔶 Urgent — last few minutes',
-        h1: 'LAST CALL', accent: `${m} Minutes`,
-        sub: 'Seriously, put the kettle down after this one.'
+        badge: '🔶 Urgent — dernières minutes',
+        h1: 'DERNIER APPEL', accent: `${m} Minutes`,
+        sub: 'Posez la bouilloire après celui-là.'
       };
       if (secsLeft > 60) return {
-        badge: '🚨 IMMINENT CURFEW',
-        h1: 'ALMOST TIME TO', accent: 'STOP',
-        sub: `Only ${m} minute${m > 1 ? 's' : ''} remain. This is your final warning.`
+        badge: '🚨 COUVRE-FEU IMMINENT',
+        h1: 'IL EST PRESQUE TEMPS DE', accent: "S'ARRÊTER",
+        sub: `Seulement ${m} minute${m > 1 ? 's' : ''}. Dernier avertissement.`
       };
       return {
-        badge: '🚨🚨 FINAL COUNTDOWN',
-        h1: 'PUT DOWN', accent: 'THE CUP',
-        sub: `Coffee forbidden in under a minute.`
+        badge: '🚨🚨 COMPTE À REBOURS FINAL',
+        h1: 'POSEZ', accent: 'LA TASSE',
+        sub: 'Café interdit dans moins d\'une minute.'
       };
     }
 
@@ -486,8 +571,8 @@
     }
 
     // ── Main update loop ─────────────────────────────────────────
-    const TEST_SCALE = 1440; // 1 real minute = 24 simulated hours
-    const TEST_OFFSET = WARNING_SECS - 5; // start 5 sim-seconds before warning
+    const TEST_SCALE  = 1440; // 1 real minute = 24 simulated hours
+    const TEST_OFFSET = PRE_SECS - 5; // start just before pre-allowed zone
     function update() {
       const total = Math.floor(((Date.now() / 1000 * TEST_SCALE) + TEST_OFFSET) % 86400);
       const h = Math.floor(total / 3600);
@@ -496,30 +581,59 @@
 
       $('time-display').textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
 
-      // ── ALLOWED ──────────────────────────────────────
-      if (total < WARNING_SECS) {
+      // ── PRÉ-AUTORISÉ ─────────────────────────────────
+      if (total >= PRE_SECS && total < RESUME_SECS) {
+        setPage('pre-allowed');
+
+        const elapsed  = total - PRE_SECS;
+        const secsLeft = RESUME_SECS - total;
+        const raw      = elapsed / PRE_WINDOW;
+        const t        = ease(raw);
+
+        document.body.style.background =
+          `linear-gradient(135deg, ${blendRgb(PRE1_START, PRE1_END, t)} 0%, ${blendRgb(PRE2_START, PRE2_END, t)} 100%)`;
+
+        $('progress-bar-wrap').style.display = 'block';
+        $('progress-bar-fill').style.width   = `${raw * 100}%`;
+
+        const intensityClass =
+          raw < 0.33 ? 'pre-low' :
+          raw < 0.66 ? 'pre-mid' :
+          raw < 0.90 ? 'pre-high' : 'pre-crit';
+        document.body.classList.remove('pre-low','pre-mid','pre-high','pre-crit');
+        document.body.classList.add(intensityClass);
+
+        const content = getPreAllowedContent(secsLeft);
+        $('badge-pre-allowed').textContent          = content.badge;
+        $('h1-pre-allowed').childNodes[0].nodeValue = content.h1 + '\n';
+        $('h1-accent-pre-allowed').textContent      = content.accent;
+        $('sub-pre-allowed').textContent            = content.sub;
+        $('timer-pre-allowed').textContent          = fmt(secsLeft);
+
+        $('cup-pre-allowed').textContent =
+          raw < 0.4 ? '😴' : raw < 0.7 ? '🥱' : raw < 0.9 ? '👀' : '☕';
+
+      // ── AUTORISÉ ──────────────────────────────────────
+      } else if (total >= RESUME_SECS && total < WARNING_SECS) {
         setPage('allowed');
         const secsLeft = WARNING_SECS - total;
         $('timer-allowed').textContent = fmt(secsLeft);
 
-      // ── WARNING ──────────────────────────────────────
-      } else if (total < CUTOFF_SECS) {
+      // ── ALERTE ────────────────────────────────────────
+      } else if (total >= WARNING_SECS && total < CUTOFF_SECS) {
         setPage('warning');
 
         const elapsed  = total - WARNING_SECS;
         const secsLeft = CUTOFF_SECS - total;
-        const raw      = elapsed / WINDOW_SECS;          // 0 → 1, linear
-        const t        = ease(raw);                       // eased
+        const raw      = elapsed / WARN_WINDOW;
+        const t        = ease(raw);
 
-        // Background color blend
         document.body.style.background =
           `linear-gradient(135deg, ${blendRgb(BG1_START, BG1_END, t)} 0%, ${blendRgb(BG2_START, BG2_END, t)} 100%)`;
 
-        // Progress bar
         $('progress-bar-wrap').style.display = 'block';
         $('progress-bar-fill').style.width   = `${raw * 100}%`;
 
-        // Intensity class (controls animation speed & bar color)
         const intensityClass =
           raw < 0.33 ? 'warn-low' :
           raw < 0.66 ? 'warn-mid' :
@@ -527,43 +641,38 @@
         document.body.classList.remove('warn-low','warn-mid','warn-high','warn-crit');
         document.body.classList.add(intensityClass);
 
-        // Content
         const content = getWarningContent(secsLeft);
-        $('badge-warning').textContent    = content.badge;
-        $('h1-warning').childNodes[0].nodeValue = content.h1 + '\n';
-        $('h1-accent-warning').textContent = content.accent;
-        $('sub-warning').textContent       = content.sub;
-        $('timer-warning').textContent     = fmt(secsLeft);
+        $('badge-warning').textContent              = content.badge;
+        $('h1-warning').childNodes[0].nodeValue     = content.h1 + '\n';
+        $('h1-accent-warning').textContent          = content.accent;
+        $('sub-warning').textContent                = content.sub;
+        $('timer-warning').textContent              = fmt(secsLeft);
 
-        // Cup emoji escalates
         $('cup-warning').textContent =
           raw < 0.5 ? '☕' : raw < 0.8 ? '🥵' : '😱';
 
-      // ── DENIED ───────────────────────────────────────
+      // ── REFUSÉ ────────────────────────────────────────
       } else {
         setPage('denied');
         document.body.style.background = '';
 
-        // Time until 6:00 AM
-        const resumeSecs = RESUME_H * 3600 + RESUME_M * 60;
-        const secsUntilResume = total < resumeSecs
-          ? resumeSecs - total
-          : (86400 - total) + resumeSecs;
-        $('timer-denied').textContent = fmt(secsUntilResume);
+        const secsUntilPre = total < PRE_SECS
+          ? PRE_SECS - total
+          : (86400 - total) + PRE_SECS;
+        $('timer-denied').textContent = fmt(secsUntilPre);
       }
     }
 
     // ── Page switcher ────────────────────────────────────────────
-    const pages = ['allowed','warning','denied'];
+    const pages = ['allowed','pre-allowed','warning','denied'];
     function setPage(name) {
       pages.forEach(p => {
         const el = $(`page-${p}`);
         el.classList.toggle('hidden', p !== name);
       });
       document.body.className = name;
-      if (name === 'warning') {
-        document.body.classList.add('warn-low'); // will be updated in loop
-      }
+      if (name === 'warning') document.body.classList.add('warn-low');
+      if (name === 'pre-allowed') document.body.classList.add('pre-low');
     }
 
     // ── Init ─────────────────────────────────────────────────────
