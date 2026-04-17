@@ -372,9 +372,50 @@
     body.denied  #time-display { color:#f87171; }
 
     .hidden { display:none !important; }
+
+    /* ─────────────────────────────────────────
+       CELESTIAL BODY (lune / soleil)
+    ───────────────────────────────────────── */
+    #celestial {
+      position: fixed;
+      top: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 3.5rem;
+      z-index: 5;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #cel-moon {
+      position: absolute;
+      opacity: 0;
+      animation: celFloat 6s ease-in-out infinite;
+      filter: drop-shadow(0 0 16px rgba(200,220,255,0.7));
+    }
+    #cel-sun {
+      position: absolute;
+      opacity: 0;
+      animation: celFloat 8s ease-in-out infinite, sunSpin 60s linear infinite;
+      filter: drop-shadow(0 0 20px rgba(255,210,60,0.8));
+    }
+    @keyframes celFloat {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-8px); }
+    }
+    @keyframes sunSpin {
+      from { filter: drop-shadow(0 0 20px rgba(255,210,60,0.8)) rotate(0deg); }
+      to   { filter: drop-shadow(0 0 20px rgba(255,210,60,0.8)) rotate(360deg); }
+    }
   </style>
 </head>
 <body>
+
+  <div id="celestial">
+    <span id="cel-moon">🌙</span>
+    <span id="cel-sun">☀️</span>
+  </div>
 
   <div id="progress-bar-wrap">
     <div id="progress-bar-fill"></div>
@@ -567,6 +608,31 @@
       };
     }
 
+    // ── Celestial opacity ────────────────────────────────────────
+    function updateCelestial(total) {
+      // Moon:  fade in 23h→00h, full 00h→05h, fade out 05h→07h
+      // Sun:   fade in 05h→07h, full 07h→12h, fade out 12h→12h30
+      const H = 3600;
+      let moonOp = 0, sunOp = 0;
+
+      if (total >= 23 * H) {
+        moonOp = (total - 23 * H) / H;                        // 23h→00h
+      } else if (total <= 5 * H) {
+        moonOp = 1;                                            // 00h→05h
+      } else if (total <= 7 * H) {
+        const t = (total - 5 * H) / (2 * H);                  // 05h→07h
+        moonOp = 1 - t;
+        sunOp  = t;
+      } else if (total <= 12 * H) {
+        sunOp = 1;                                             // 07h→12h
+      } else if (total <= 12.5 * H) {
+        sunOp = 1 - (total - 12 * H) / (0.5 * H);            // 12h→12h30
+      }
+
+      $('cel-moon').style.opacity = moonOp;
+      $('cel-sun').style.opacity  = sunOp;
+    }
+
     // ── Helpers ──────────────────────────────────────────────────
     const pad = n => String(n).padStart(2,'0');
     const fmt = s => `${pad(Math.floor(s/3600))}:${pad(Math.floor(s%3600/60))}:${pad(s%60)}`;
@@ -595,6 +661,7 @@
       const s = total % 60;
 
       $('time-display').textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+      updateCelestial(total);
 
       // ── PRÉ-AUTORISÉ ─────────────────────────────────
       if (total >= PRE_SECS && total < RESUME_SECS) {
