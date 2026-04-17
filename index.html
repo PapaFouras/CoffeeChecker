@@ -652,13 +652,10 @@
     }
 
     // ── Main update loop ─────────────────────────────────────────
-    const TEST_SCALE  = 1440; // 1 real minute = 24 simulated hours
-    const TEST_OFFSET = PRE_SECS - 5; // start just before pre-allowed zone
     function update() {
-      const total = Math.floor(((Date.now() / 1000 * TEST_SCALE) + TEST_OFFSET) % 86400);
-      const h = Math.floor(total / 3600);
-      const m = Math.floor((total % 3600) / 60);
-      const s = total % 60;
+      const now  = new Date();
+      const h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
+      const total = h * 3600 + m * 60 + s;
 
       $('time-display').textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
       updateCelestial(total);
@@ -761,7 +758,7 @@
     spawnParticles();
     setInterval(spawnParticles, 30000);
     update();
-    setInterval(update, 100);
+    setInterval(update, 1000);
   </script>
 </body>
 </html>
