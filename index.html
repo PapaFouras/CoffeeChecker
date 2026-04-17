@@ -616,7 +616,7 @@
       // ── AUTORISÉ ──────────────────────────────────────
       } else if (total >= RESUME_SECS && total < WARNING_SECS) {
         setPage('allowed');
-        const secsLeft = WARNING_SECS - total;
+        const secsLeft = CUTOFF_SECS - total;
         $('timer-allowed').textContent = fmt(secsLeft);
 
       // ── ALERTE ────────────────────────────────────────
